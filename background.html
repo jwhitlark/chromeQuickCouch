@@ -1,0 +1,88 @@
+<script>
+// This event is fired each time the user updates the text in the omnibox,
+// as long as the extension's keyword mode is still active.
+
+// Get all available couch dbs
+function getDatabases() {
+    var url = "http:///localhost:5984/_all_dbs";
+
+    var req = new XMLHttpRequest();
+    req.open("GET", url, false);
+    req.send();
+    response=req.responseText;
+    console.log('getDb result: ' + response);
+    return eval(response)
+}
+
+chrome.omnibox.onInputChanged.addListener(
+    function() {
+	var favorite = localStorage["preferred_couchdb"];
+	if (!favorite)
+	{
+	    couchurl = "localhost:5984";
+	}
+	else
+	{
+	    couchurl = favorite;
+	}
+	console.log('favorite couch: ' + couchurl);
+
+	allDbs = getDatabases()
+	console.log('allDbs: ' + allDbs);
+    });
+
+
+chrome.omnibox.onInputChanged.addListener(
+  function(text, suggest) {
+    console.log('inputChanged: ' + text);
+    suggestions = [];
+    for(var i=0,len=allDbs.length; value=allDbs[i], i<len; i++)
+      {
+	if(value.indexOf(text) != -1)
+	{
+	    suggestions.push({content: value , description: "Database <match>" + value + "</match>"});
+	    console.log('item is: ' + value);
+	}
+      }
+      suggest(suggestions);
+  });
+
+function navigate(url) {
+  chrome.tabs.getSelected(null, function(tab) {
+    chrome.tabs.update(tab.id, {url: url});
+  });
+}
+
+function resetDefaultSuggestion() {
+  chrome.omnibox.setDefaultSuggestion({
+    description: '<url><match>couch:</match></url> Couchdb _utils or db'
+  });
+}
+
+resetDefaultSuggestion();
+
+// This event is fired with the user accepts the input in the omnibox.
+chrome.omnibox.onInputEntered.addListener(
+  function(text) {
+    console.log('inputEntered: ' + text);
+
+
+
+    if(text == '')
+      {
+	  navigate("http://" + couchurl + "/_utils")
+      }
+      else
+      {
+	  // Navigate to best match
+	  if(suggestions.length > 0)
+	      {
+	      navigate("http://" + couchurl + "/_utils/database.html?" + suggestions[0].content)
+	      }
+	  else
+	      {
+		  navigate("http://" + couchurl + "/_utils")
+	      }
+      }
+  });
+</script>

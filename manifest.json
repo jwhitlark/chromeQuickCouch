@@ -1,0 +1,9 @@
+{
+  "name": "ChromeCouch extension",
+  "description" : "To use, type 'couch' plus a search term into the Omnibox.",
+  "version": "1.0",
+  "background_page": "background.html",
+  "omnibox": { "keyword" : "couch" },
+  "permissions": [ "tabs", "http://localhost/" ],
+  "options_page": "options.html"
+}
